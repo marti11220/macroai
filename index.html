@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mi Diario de Comidas</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; }
+    h1 { text-align: center; }
+    .dia { border: 1px solid #ccc; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
+    input, textarea { width: 100%; margin: 5px 0; padding: 8px; }
+    button { padding: 8px 12px; margin-top: 5px; }
+  </style>
+</head>
+<body>
+  <h1>📅 TESTMi Diario de Comidas</h1>
+
+  <label>Fecha:</label>
+  <input type="date" id="fecha" />
+
+  <label>Comida (texto, foto o audio descrito):</label>
+  <textarea id="comida" placeholder="Ej: Arroz con pollo"></textarea>
+
+  <button onclick="guardar()">Guardar</button>
+
+  <h2>Historial</h2>
+  <div id="historial"></div>
+
+  <script>
+    function guardar() {
+      const fecha = document.getElementById('fecha').value;
+      const comida = document.getElementById('comida').value;
+      if (!fecha || !comida) return alert('Falta fecha o comida');
+
+      let registros = JSON.parse(localStorage.getItem('comidas') || '{}');
+      if (!registros[fecha]) registros[fecha] = [];
+      registros[fecha].push(comida);
+
+      localStorage.setItem('comidas', JSON.stringify(registros));
+      mostrar();
+      document.getElementById('comida').value = '';
+    }
+
+    function mostrar() {
+      let registros = JSON.parse(localStorage.getItem('comidas') || '{}');
+      let historial = document.getElementById('historial');
+      historial.innerHTML = '';
+      for (let fecha in registros) {
+        let div = document.createElement('div');
+        div.className = 'dia';
+        div.innerHTML = `<b>${fecha}</b><ul>` +
+          registros[fecha].map(c => `<li>${c}</li>`).join('') +
+          '</ul>';
+        historial.appendChild(div);
+      }
+    }
+
+    mostrar();
+  </script>
+</body>
+</html>
