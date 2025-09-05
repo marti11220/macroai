@@ -2,19 +2,61 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Diario de Comidas con IA</title>
+<title>Diario de Comidas</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body { font-family: Arial; max-width: 800px; margin:auto; padding:20px; }
-nav { display:flex; gap:20px; margin-bottom:20px; }
-nav button { padding:8px 16px; cursor:pointer; }
+/* 🌑 Tema oscuro y responsive */
+body { font-family: Arial, sans-serif; margin:0; padding:0; background-color:#121212; color:#eee; }
+.container { max-width: 800px; margin:auto; padding:20px; }
+h1 { text-align:center; margin-bottom:20px; }
+
+/* Menú bonito */
+nav { display:flex; justify-content:center; gap:20px; margin-bottom:20px; }
+nav button {
+  background-color:#1f1f1f; border:none; padding:10px 20px; border-radius:10px;
+  cursor:pointer; color:#eee; font-weight:bold; transition:0.2s;
+}
+nav button:hover { background-color:#333; }
+
+/* Secciones */
 section { display:none; }
 section.active { display:block; }
-.dia { display:inline-block; width:50px; height:50px; border:1px solid #ccc; margin:2px; text-align:center; line-height:50px; cursor:pointer; }
-.dia.cumplido { background-color: #a8e6a1; }
+
+/* Formulario añadir comida */
+.form-group { margin-bottom:15px; }
+.form-group label { display:block; margin-bottom:5px; font-weight:bold; }
+.form-group input, .form-group select, .form-group textarea { width:100%; padding:8px; border-radius:5px; border:none; }
+
+/* Botón guardar */
+button.save { background-color:#4caf50; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:bold; transition:0.2s; }
+button.save:hover { background-color:#45a049; }
+
+/* Calendario */
+#calendario { text-align:center; }
+.month { margin-bottom:20px; }
+.month h3 { margin-bottom:10px; }
+.dia { display:inline-block; width:40px; height:40px; line-height:40px; margin:2px; border-radius:50%; background:#2a2a2a; cursor:pointer; transition:0.2s; }
+.dia.cumplido { background-color:#4caf50; }
+.dia.nocumplido { background-color:#e74c3c; }
+.dia:hover { transform:scale(1.2); }
+
+/* Detalle día */
+#detalle_dia { margin-top:20px; text-align:left; }
+
+/* Subir foto/audio más bonito */
+input[type=file] { background-color:#2a2a2a; color:#eee; padding:8px; border-radius:5px; border:none; }
+textarea { resize:none; }
+
+/* Responsive iPhone 11 */
+@media (max-width: 500px) {
+  .dia { width:30px; height:30px; line-height:30px; font-size:12px; }
+  nav { flex-direction: column; }
+  nav button { width:80%; margin:auto; margin-bottom:10px; }
+}
 </style>
 </head>
 <body>
-
+<div class="container">
 <h1>🍽️ Diario de Comidas</h1>
 
 <nav>
@@ -24,71 +66,95 @@ section.active { display:block; }
 
 <!-- Añadir Comida -->
 <section id="añadir">
-  <label>Fecha:</label>
-  <input type="date" id="fecha_comida"><br><br>
+  <div class="form-group">
+    <label>Fecha:</label>
+    <input type="date" id="fecha_comida">
+  </div>
 
-  <label>Comida:</label>
-  <select id="tipo_comida">
-    <option value="desayuno">Desayuno</option>
-    <option value="comida">Comida</option>
-    <option value="merienda">Merienda</option>
-    <option value="cena">Cena</option>
-  </select><br><br>
+  <div class="form-group">
+    <label>Comida:</label>
+    <select id="tipo_comida">
+      <option value="desayuno">Desayuno</option>
+      <option value="comida">Comida</option>
+      <option value="merienda">Merienda</option>
+      <option value="cena">Cena</option>
+    </select>
+  </div>
 
-  <label>Texto:</label>
-  <textarea id="texto_comida"></textarea><br><br>
+  <div class="form-group">
+    <label>Notas:</label>
+    <textarea id="texto_comida" rows="3" placeholder="Describe tu comida..."></textarea>
+  </div>
 
-  <label>Foto:</label>
-  <input type="file" id="foto_comida" accept="image/*"><br><br>
+  <div class="form-group">
+    <input type="file" id="foto_comida" accept="image/*">
+  </div>
 
-  <label>Audio:</label>
-  <input type="file" id="audio_comida" accept="audio/*"><br><br>
+  <div class="form-group">
+    <input type="file" id="audio_comida" accept="audio/*">
+  </div>
 
-  <button onclick="guardarComida()">Guardar Comida</button>
+  <button class="save" onclick="guardarComida()">💾 Guardar Comida</button>
 </section>
 
 <!-- Calendario -->
 <section id="calendario">
-  <label>Objetivo de macros:</label><br>
-  Proteínas: <input type="number" id="objetivo_prote" value="150"> 
-  Grasas: <input type="number" id="objetivo_gras" value="50"> 
-  Carbs: <input type="number" id="objetivo_carbs" value="300"> 
-  <button onclick="guardarObjetivo()">Guardar objetivo</button>
-  <div id="dias"></div>
+  <div class="form-group">
+    <label>Objetivo de macros:</label>
+    <input type="number" id="objetivo_prote" value="150" placeholder="Proteínas">
+    <input type="number" id="objetivo_gras" value="50" placeholder="Grasas">
+    <input type="number" id="objetivo_carbs" value="300" placeholder="Carbs">
+    <button class="save" onclick="guardarObjetivo()">💾 Guardar objetivo</button>
+  </div>
+  <div id="meses"></div>
   <div id="detalle_dia"></div>
 </section>
+</div>
 
 <script>
-// Funciones para cambiar de sección
+// 🔹 Cambiar sección
 function abrirSeccion(id){
   document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
-// Inicializa fecha de hoy en añadir comida
-document.getElementById('fecha_comida').value = new Date().toISOString().substr(0,10);
-
-// LocalStorage
+// 🔹 LocalStorage
 function cargarDatos(){ return JSON.parse(localStorage.getItem('diario')) || {}; }
 function guardarDatos(datos){ localStorage.setItem('diario', JSON.stringify(datos)); }
 
-// Guardar comida
+// 🔹 Detectar comida según hora
+function detectarComida(){
+  const h = new Date().getHours();
+  if(h>=6 && h<11) return 'desayuno';
+  if(h>=11 && h<16) return 'comida';
+  if(h>=16 && h<19) return 'merienda';
+  return 'cena';
+}
+
+// Inicializar añadir comida
+const fechaInput = document.getElementById('fecha_comida');
+fechaInput.value = new Date().toISOString().substr(0,10);
+document.getElementById('tipo_comida').value = detectarComida();
+
+// 🔹 Guardar comida
 function guardarComida(){
-  const fecha = document.getElementById('fecha_comida').value;
+  const fecha = fechaInput.value;
   const tipo = document.getElementById('tipo_comida').value;
   const texto = document.getElementById('texto_comida').value;
-  // TODO: leer foto/audio como base64
-  const comida = { texto, macros: {proteinas: 20, grasas: 15, carbs:30} }; // ejemplo
+
+  // TODO: foto/audio en base64
+  const comida = { texto, macros:{proteinas:20, grasas:15, carbs:30} }; // ejemplo
+
   const datos = cargarDatos();
-  if(!datos[fecha]) datos[fecha] = {};
-  if(!datos[fecha][tipo]) datos[fecha][tipo] = [];
+  if(!datos[fecha]) datos[fecha]={};
+  if(!datos[fecha][tipo]) datos[fecha][tipo]=[];
   datos[fecha][tipo].push(comida);
   guardarDatos(datos);
   alert("Comida guardada!");
   mostrarCalendario();
 }
 
-// Guardar objetivo
+// 🔹 Guardar objetivo
 function guardarObjetivo(){
   const datos = cargarDatos();
   datos.objetivo = {
@@ -100,53 +166,68 @@ function guardarObjetivo(){
   mostrarCalendario();
 }
 
-// Mostrar calendario básico
+// 🔹 Mostrar calendario anual
 function mostrarCalendario(){
   const datos = cargarDatos();
-  const diasDiv = document.getElementById('dias');
-  diasDiv.innerHTML = '';
-  for(let fecha in datos){
-    if(fecha === 'objetivo') continue;
-    const div = document.createElement('div');
-    div.className = 'dia';
-    div.textContent = fecha.split('-')[2]; // día del mes
-    // comprobar si cumple macros
-    const objetivo = datos.objetivo || {proteinas:0, grasas:0, carbs:0};
-    let totales = {proteinas:0, grasas:0, carbs:0};
-    for(let tipo in datos[fecha]){
-      datos[fecha][tipo].forEach(c => {
-        totales.proteinas += c.macros.proteinas;
-        totales.grasas += c.macros.grasas;
-        totales.carbs += c.macros.carbs;
-      });
+  const mesesDiv = document.getElementById('meses');
+  mesesDiv.innerHTML='';
+  const hoy = new Date();
+  for(let m=0; m<12; m++){
+    const mes = new Date(hoy.getFullYear(), hoy.getMonth()+m,1);
+    const nombreMes = mes.toLocaleString('es',{month:'long'});
+    const days = new Date(mes.getFullYear(), mes.getMonth()+1,0).getDate();
+
+    const mesDiv = document.createElement('div');
+    mesDiv.className='month';
+    mesDiv.innerHTML = `<h3>${nombreMes} ${mes.getFullYear()}</h3>`;
+    for(let d=1; d<=days; d++){
+      const fecha = `${mes.getFullYear()}-${String(mes.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const div = document.createElement('div');
+      div.className='dia';
+      div.textContent = d;
+      if(datos[fecha]){
+        const objetivo = datos.objetivo||{proteinas:0,grasas:0,carbs:0};
+        let tot={proteinas:0,grasas:0,carbs:0};
+        for(let tipo in datos[fecha]){
+          datos[fecha][tipo].forEach(c=>{
+            tot.proteinas+=c.macros.proteinas;
+            tot.grasas+=c.macros.grasas;
+            tot.carbs+=c.macros.carbs;
+          });
+        }
+        if(tot.proteinas>=objetivo.proteinas &&
+           tot.grasas>=objetivo.grasas &&
+           tot.carbs>=objetivo.carbs){
+          div.classList.add('cumplido');
+        }else{
+          div.classList.add('nocumplido');
+        }
+      }else{
+        div.classList.add('nocumplido');
+      }
+      div.onclick = ()=> mostrarDetalleDia(fecha);
+      mesDiv.appendChild(div);
     }
-    if(totales.proteinas>=objetivo.proteinas &&
-       totales.grasas>=objetivo.grasas &&
-       totales.carbs>=objetivo.carbs){
-      div.classList.add('cumplido');
-    }
-    div.onclick = ()=> mostrarDetalleDia(fecha);
-    diasDiv.appendChild(div);
+    mesesDiv.appendChild(mesDiv);
   }
 }
 
-// Mostrar detalle de un día
+// 🔹 Mostrar detalle día
 function mostrarDetalleDia(fecha){
   const datos = cargarDatos();
   const detalle = document.getElementById('detalle_dia');
-  if(!datos[fecha]) { detalle.innerHTML = "Sin datos"; return; }
-  let html = `<h3>Detalles ${fecha}</h3>`;
+  if(!datos[fecha]) { detalle.innerHTML="Sin datos"; return; }
+  let html=`<h3>Detalles ${fecha}</h3>`;
   for(let tipo in datos[fecha]){
-    html += `<b>${tipo}</b><ul>`;
-    datos[fecha][tipo].forEach(c => html += `<li>${c.texto} (Prote: ${c.macros.proteinas}, Gras: ${c.macros.grasas}, Carb: ${c.macros.carbs})</li>`);
-    html += `</ul>`;
+    html+=`<b>${tipo}</b><ul>`;
+    datos[fecha][tipo].forEach(c=>html+=`<li>${c.texto} (Prote:${c.macros.proteinas}, Gras:${c.macros.grasas}, Carb:${c.macros.carbs})</li>`);
+    html+=`</ul>`;
   }
-  detalle.innerHTML = html;
+  detalle.innerHTML=html;
 }
 
 mostrarCalendario();
 abrirSeccion('añadir');
 </script>
-
 </body>
 </html>
